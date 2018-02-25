@@ -37,7 +37,7 @@
 \newcommand{\eg}{{\it e.g.}}
 \newtheorem{proposition}[theorem]{Proposition}
 
-
+\usepackage{listings}
 %From CI paper
 \let\oldcite=\cite                                                              
 \renewcommand{\cite}[1]{\textcolor[rgb]{0.2,0.5,.3}{\oldcite{#1}}}
@@ -251,6 +251,15 @@ Popular nonlinearities used through all \textbf{but} last layer:
 \end{frame}
 
 \begin{frame}
+\frametitle{Dense Layer}
+	\begin{figure}[H]
+	\centerline{
+		\includegraphics[width=1\textwidth]{denselayer.png}
+	}
+	\caption{Dense Layers}
+\end{figure}
+\end{frame}
+\begin{frame}
 \frametitle{Now We Know ($+-\times \div$) ...}
 	\begin{figure}[H]
 	\centerline{
@@ -272,6 +281,21 @@ Popular nonlinearities used through all \textbf{but} last layer:
 	\end{figure}
 \end{frame}
 
+
+\begin{frame}
+\frametitle{The Logics of Deep Learning (Supervised Training)}
+	\begin{figure}[H]
+	\centerline{
+		\includegraphics[width=1\textwidth]{logics.png}
+	}
+\caption{Working Logics of Supervised Deep Learning. (Training vs. Testing)}
+	\end{figure}
+
+A standard workflow includes training $\rightarrow$ validation $\rightarrow$ testing.
+\end{frame}
+
+%===============================================================================
+
 \begin{frame}
 \frametitle{Optimization Problem}
 In training state, we are given ground truth images and its labels for recognition/classification, or masks for segmentation, high-resolution image for super-resolution, clear image for de-noising \etc. 
@@ -290,29 +314,74 @@ Popular losses,
 
 \begin{frame}
 \frametitle{Loss Function Example: Cross Entropy}
+	\begin{figure}[H]
+	\centerline{
+		\includegraphics[width=1\textwidth]{loss_last_layer.png}
+	}
+	\caption{Let's look at what happens at the last layer (for single-object segmentation).}
+	\end{figure}
+\end{frame}
+
+\begin{frame}
+\frametitle{Loss Function Example: Cross Entropy}
 Suppose we are doing a single object segmentation, \eg\ lung. The last convolutional channel will have 2 channels corresponding foreground and background. 
 	\begin{figure}[H]
 	\centerline{
 		\includegraphics[width=0.8\textwidth]{last_layer.png}
 	}
-	\end{figure}
-Softmax + Cross-entropy
+	\caption{\textbf{Loss = Softmax + Cross-entropy}}
+	\end{figure} 
 \end{frame}
-\section{Optimization}
+
 \begin{frame}
-	\frametitle{Overview}
-%		\begin{figure}[H]
-%			\centerline{
-%				\includegraphics[width=0.7\textwidth]{bigdata}
-%			}
-%			\caption{Big data is too big, only few are important.}
-%		\end{figure}
-%	\vskip -0.1in
-%	Mathematics of sparse modeling, 
-%	\begin{align*}
-%	&\min \text{ } Loss(x)  \\
-%	&\text{s.t. } g(x) \text{ is sparse}.
-%	\end{align*}
+\frametitle{Loss Function Example: Cross Entropy}
+Let $A = (F, B) \in \R^{256\times 256 \times 2}$ be the output map with $F \in \R^{256\times 256}$ and $B \in \R^{256 \times 256}$ are the foreground and background channels. 
+\begin{itemize}
+	\item Softmax: 
+	\[
+	S := Softmax(A)_{ij} = \frac{\exp(F_{ij})}{\exp(F_{ij}) + \exp(B_{ij})}
+	\]
+	\item Final Cross Entropy Loss:
+	\begin{align*}
+	\mathcal{L} = -\bigg(\frac{1}{256^2}\sum_{i=1}^{256} \sum_{j=1}^{256}y_{ij} \log(S_{ij}) + (1-y_{ij}) \log(1-S_{ij})\bigg)
+	\end{align*}
+	where $y_{ij}$ is 1 if the pixel belongs to lung and 0 otherwise.
+\end{itemize}
+In \textbf{testing} phase, the prediction mask will be a simple comparison between foreground and background.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Code Samples}
+Code samples of Conv-BN-ReLU.
+\begin{lstlisting}[language=Python,keywordstyle=\color{red}]
+net['conv0_1'] = batch_norm(
+Conv2DDNNLayer(net['input'], 
+num_filters=64, filter_size=3, pad='same', 
+W=HeNormal(gain='relu'), nonlinearity=rectify))
+
+net['conv0_2'] = batch_norm(
+Conv2DDNNLayer(net['conv0_1'], num_filters=64, 
+filter_size=3, pad='same',
+W=HeNormal(gain='relu'), nonlinearity=rectify))
+\end{lstlisting}
+
+\end{frame}
+
+
+\section{Optimization in Deep Learning}
+\begin{frame}
+	\frametitle{Optimization Routine of Deep Networks}
+	The optimization of $W$ is based on gradient descent algorithm.
+	\begin{enumerate}
+		\item Initialize the weights  of the entire network as $W_0$, a learning rate $\alpha$.
+		\item For $k = 1,2, ...$
+		\begin{enumerate}
+			\item Update $W_k$: $W_k = W_{k-1} - \alpha \nabla_W f(I;W_{k-1})$.
+			\item if $mod(k, 10K) == 0$: $\alpha \leftarrow 0.8*\alpha$.
+		\end{enumerate}
+		\item Select the best iterations by cross-validation.
+	\end{enumerate}
+So, how can we calculate $\nabla_W f(I;W_{k-1})$?
 \end{frame}
 
 \section{Networks Variants}
