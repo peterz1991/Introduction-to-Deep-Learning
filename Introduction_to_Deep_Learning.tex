@@ -376,13 +376,133 @@ W=HeNormal(gain='relu'), nonlinearity=rectify))
 		\item Initialize the weights  of the entire network as $W_0$, a learning rate $\alpha$.
 		\item For $k = 1,2, ...$
 		\begin{enumerate}
-			\item Update $W_k$: $W_k = W_{k-1} - \alpha \nabla_W f(I;W_{k-1})$.
+			\item Update $W_k$: $W_k = W_{k-1} - \alpha \nabla_W L(I;W_{k-1})$.
 			\item if $mod(k, 10K) == 0$: $\alpha \leftarrow 0.8*\alpha$.
 		\end{enumerate}
 		\item Select the best iterations by cross-validation.
 	\end{enumerate}
-So, how can we calculate $\nabla_W f(I;W_{k-1})$?
+So, how can we calculate $\nabla_W L(I;W_{k-1})$?
 \end{frame}
+
+
+\begin{frame}
+\frametitle{Backpropagation In Convolutional Neural Networks}
+Function $f(I;W)$ can be written as a series composition of operations, that is
+\[
+f(\cdot;W) = C_n  \circ \cdots  C_2 \circ  P_1 \circ R_1 \circ B_1 \circ C_1 \circ I_d
+\]
+where $I_d$ is identity, $C-B-R$ is conv-bn-relu, $P$ is pooling. (Recall transposed convolution is also convolution, it therefore belongs to this general setting).
+For simplicity, consider the $l_2$ loss,
+\[
+L = \frac{1}{2} \|f(I;W) - g\|_2^2
+\] 
+The gradient descent method requires the access to $\frac{\partial L}{\partial W}$, which is,
+\begin{align*}
+\frac{\partial L}{\partial W} &= \frac{\partial f}{\partial W} (f-g) \\
+&= \frac{\partial }{\partial W}(C_n  \circ \cdots \circ B_1 \circ C_1 \circ I_d) (f-g)
+\end{align*}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Chain Rule}
+Recall the chain rule:
+\[
+(f\circ g) ' = (f'\circ g ) \cdot g' \quad \text{ for }    f(x), g(x)
+\]
+Or (with variable replacing trick).
+\[ \frac{dz}{dx} = \frac{dz}{dy} \cdot  \frac{dy}{dx}  \quad \text{ for } z=f(y), y=g(x)
+\]
+And a straightforward consequence,
+\[ 
+\frac{df}{dW} = \frac{df}{dC_n} \cdot  \frac{dC_n}{dP_{n-1}} \cdot  \frac{dP_{n-1}}{dR_{n-1}} \cdots \frac{dC_1}{dI} \quad \text{ for }  f = f(I;W)
+\]
+We now study each of the factors, and a final output will be the products.
+\end{frame}
+
+%\begin{frame}
+%\frametitle{Backpropagation on Convolutions: $\frac{\partial f}{\partial C}$}
+%Derivatives of convolutions (easy to be verified by Fourier transforms),
+%\[
+%(f \ast g) ' =  f' \ast g = f \ast g'
+%\]
+%\end{frame}
+
+\begin{frame}
+\frametitle{Backpropagation on Convolutions: $\frac{\partial f}{\partial C}$}
+	\begin{figure}[H]
+	\centerline{
+		\includegraphics[width=0.6\textwidth]{convolution_forward.png}
+	}
+	\caption{Convolution layer can be written as `sparse' dense layers.}
+	\end{figure}
+\end{frame}
+
+\begin{frame}
+\frametitle{Backpropagation on Convolutions: $\frac{\partial f}{\partial C}$ \footnote{\url{https://www.slideshare.net/kuwajima/cnnbp}}}
+\begin{figure}[H]
+	\centerline{
+		\includegraphics[width=1\textwidth]{back_conv1.png}
+	}
+\end{figure}
+\end{frame}
+
+\begin{frame}
+\frametitle{Backpropagation on Convolutions: $\frac{\partial f}{\partial C}$ \footnote{\url{https://www.slideshare.net/kuwajima/cnnbp}}}
+\begin{figure}[H]
+	\centerline{
+		\includegraphics[width=1\textwidth]{back_conv2.png}
+	}
+\end{figure}
+\end{frame}
+
+\begin{frame}
+\frametitle{Backpropagation on ReLU and Max-Pooling}
+\begin{itemize}
+	\item Since $R = \max(0,B)$, the derivative is defined piece-wisely as an indicator function,
+	\[
+	\frac{\partial R}{\partial B} = \begin{cases} 0 &\mbox{if } B\leq 0 \\ 
+	\frac{\partial B}{\partial B} = 1 & \mbox{if } B>0 \end{cases}  
+	\]
+	\item Recall max-pooling is taking maximum of small neighborhood around each pixel, the derivate of it w.r.t. the previous layer will also be $\delta$ functions!
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Backpropagation on BN \footnote{\url{https://kevinzakka.github.io/2016/09/14/batch_normalization/}}}
+	\begin{figure}[H]
+	\centerline{
+		\includegraphics[width=1\textwidth]{back_bn.png}
+	}
+\end{figure}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Backpropagation on BN \footnote{\url{https://kevinzakka.github.io/2016/09/14/batch_normalization/}}}
+\begin{figure}[H]
+	\centerline{
+		\includegraphics[width=1\textwidth]{back_bn_2.png}
+	}
+\caption{Details can be found from the link.}
+\end{figure}
+\end{frame}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \section{Networks Variants}
 \begin{frame}
