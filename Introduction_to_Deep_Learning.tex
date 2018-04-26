@@ -490,24 +490,113 @@ We now study each of the factors, and a final output will be the products.
 \end{figure}
 \end{frame}
 
+\begin{frame}
+\frametitle{First Order Methods in Deep Learning Optimization}
+Since we can obtain the gradient of $f(I;W)$ from the back-prop, we can minimize the loss using first order methods:
+\begin{itemize}
+	\item SGD,
+	\item Momentum,
+	\item Nesterov accelerated gradient,
+	\item Adam,
+	\item RMSprop,
+	\item Adagrad, ...
+\end{itemize}
+See \url{http://ruder.io/optimizing-gradient-descent/index.html}
+\end{frame}
+
+\section{Coding}
+\begin{frame}
+\frametitle{System/Software Requirements}
+\begin{itemize}
+	\item Python (preferred 3.0 and later).
+	\item Theano + Lasagne:
+	\begin{enumerate}
+		\item \url{http://deeplearning.net/software/theano/install.html}
+		\item \url{https://github.com/Lasagne/Lasagne}
+	\end{enumerate}
+	\textbf{Or} Pytorch:
+	\begin{enumerate}
+		\item OSX + Linux: \url{http://pytorch.org/}
+		\item Windows: \url{https://github.com/peterjc123/pytorch-scripts}
+	\end{enumerate} 
+	\item A GPU.
+\end{itemize}
+\end{frame}
 
 
+\begin{frame}
+\frametitle{Popular Code Schemes}
+	\begin{figure}[H]
+	\centerline{
+		\includegraphics[width=1.0\textwidth]{code_scheme.png}
+	}
+\end{figure}
+Here,
+\begin{itemize}
+	\item \textbf{Data Loader:} a function file, loads data to (pytorch array);
+	\item \textbf{Network Structure:} a function file, specifies network structure (UNet, Densenet \etc);
+	\item \textbf{Network Utils Specification:} a function file, specifies optimization methods (adam, sgd, \etc) and input/output stream of the network;
+	\item \textbf{Main Files:}  the 3 running files: train, test, validation.  
+\end{itemize} 
+\end{frame}
 
 
+\begin{frame}
+\frametitle{Data Loader (Pytorch)}
+\begin{itemize}
+	\item Load data $\rightarrow$ \textbf{augmentation} $\rightarrow$ return augmented images + labels
+	\vskip 0.2in
+	\item It \textbf{requires} 3 functions:
+	\begin{enumerate}
+		\item \textbf{init}: initialization
+		\item \textbf{getitem}: load data and augmentation
+		\item \textbf{len}: size of the data
+	\end{enumerate}
+\end{itemize}
+	\begin{figure}[H]
+	\centerline{
+		\includegraphics[width=0.5\textwidth]{augmentation.png}
+	}\caption{Illustration of Data Augmentation: translation+rotation+scaling}
+\end{figure}
+\end{frame}
 
+\begin{frame}
+\frametitle{Network Structure (Lasagne)}
+This file contains the structure of the network: 
+\begin{itemize}
+	\item different layers: conv/deconv, pooling layer
+	\item padding, stride, weight initialization
+	\item batch normalization, nonlinear activation.
+\end{itemize}
+\vskip 0.2in
+For Pytorch, a \textbf{forward} function has to be specified.
+\end{frame}
 
+\begin{frame}
+\frametitle{Networkio (Pytorch)}
+This file contains the necessary utility functions:
+\begin{itemize}
+	\item specifies optimization method (learning rate, parameters),
+	\item specifies the loss function and how it is computed,
+	\item save the learned parameters to files,
+	\item load the learned parameter from files.
+\end{itemize}
+\end{frame}
 
+\begin{frame}
+\frametitle{Main Files (Pytorch)}
+Ideally, a program should include 3 main files: 
+\begin{itemize}
+	\item \textbf{train}: load training data, start training, save weights of each \textbf{epoch}.
+	\item \textbf{validation}: load validation data, load the trained weights of each epoch, find the best one.
+	\item \textbf{test}: load test data, load the best weights, report the testing accuracy.
+\end{itemize}
+\end{frame}
 
-
-
-
-
-
-
-\section{Networks Variants}
+\section{Networks Variants: Many More to Explore}
 \begin{frame}
 \frametitle{Networks}
-	\begin{figure}[H]
+\begin{figure}[H]
 	\centerline{
 		\includegraphics[width=0.8\textwidth]{networks.png}
 	}
@@ -515,10 +604,6 @@ We now study each of the factors, and a final output will be the products.
 \end{figure}
 \end{frame}
 
-\section{Coding}
-\begin{frame}
-\frametitle{Frameworks}
-\end{frame}
 
 \begin{frame}
 	\begin{center}
